@@ -293,6 +293,138 @@ function DetailPanel({ panel, data, entities, onClose }) {
     );
   }
 
+  if (panel === 'nodes-failed') {
+    title = 'Total Nodes in Failed Jobs';
+    const byNodes = [...data.node_count].sort((a, b) => b.error - a.error);
+    const maxErr  = byNodes[0]?.error || 1;
+    content = (
+      <>
+        <div className="detail-stat-grid">
+          <div className="detail-stat">
+            <div className="detail-stat-val" style={{ color: 'var(--error-l)' }}>{fmtN(data.summary.total_nodes_failed)}</div>
+            <div className="detail-stat-lbl">Total Node-Jobs Failed</div>
+          </div>
+          <div className="detail-stat">
+            <div className="detail-stat-val">{data.node_count.length}</div>
+            <div className="detail-stat-lbl">Node Buckets</div>
+          </div>
+        </div>
+        <div className="detail-section-lbl">Failed Jobs by Node Bucket</div>
+        {byNodes.map(d => (
+          <div key={d.name} className="detail-row">
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div className="detail-name">Nodes: {d.name}</div>
+              <div style={{ fontSize: '.7rem', color: 'var(--muted)' }}>{fmtN(d.error)} errors / {fmtN(d.total)} jobs</div>
+              <div className="detail-mini-bar">
+                <div className="detail-mini-bar-fill" style={{ width: (d.error / maxErr * 100) + '%', background: 'var(--error-l)' }} />
+              </div>
+            </div>
+            <span className="detail-badge badge-error">{fmtP(d.error_rate)}%</span>
+          </div>
+        ))}
+      </>
+    );
+  }
+
+  if (panel === 'sci-nodes') {
+    title = 'Science Fields — Nodes in Failed Jobs';
+    const sorted = [...data.science_field].sort((a, b) => (b.nodes_failed || 0) - (a.nodes_failed || 0));
+    const maxN   = sorted[0]?.nodes_failed || 1;
+    content = (
+      <>
+        <div className="detail-stat-grid">
+          <div className="detail-stat">
+            <div className="detail-stat-val" style={{ color: 'var(--accent)' }}>{sorted[0]?.name || '—'}</div>
+            <div className="detail-stat-lbl">Most Nodes Failed</div>
+          </div>
+          <div className="detail-stat">
+            <div className="detail-stat-val">{fmtN(sorted[0]?.nodes_failed)}</div>
+            <div className="detail-stat-lbl">Node-Jobs</div>
+          </div>
+        </div>
+        <div className="detail-section-lbl">All Fields by Nodes in Failed Jobs</div>
+        {sorted.map(d => (
+          <div key={d.name} className="detail-row">
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div className="detail-name">{d.name}</div>
+              <div style={{ fontSize: '.7rem', color: 'var(--muted)' }}>{fmtN(d.nodes_failed)} node-jobs failed &bull; {fmtP(d.error_rate)}% rate</div>
+              <div className="detail-mini-bar">
+                <div className="detail-mini-bar-fill" style={{ width: ((d.nodes_failed || 0) / maxN * 100) + '%', background: 'var(--accent)' }} />
+              </div>
+            </div>
+            <span className="detail-badge" style={{ background: 'rgba(79,156,249,.15)', color: 'var(--accent)' }}>{fmtN(d.nodes_failed)}</span>
+          </div>
+        ))}
+      </>
+    );
+  }
+
+  if (panel === 'users') {
+    title = 'Top Error Users (Anonymised IDs)';
+    const top = (data.users || []).slice(0, 20);
+    const maxE = top[0]?.error || 1;
+    content = (
+      <>
+        <div className="detail-stat-grid">
+          <div className="detail-stat">
+            <div className="detail-stat-val">{(data.users || []).length}</div>
+            <div className="detail-stat-lbl">Total Users</div>
+          </div>
+          <div className="detail-stat">
+            <div className="detail-stat-val" style={{ color: 'var(--error-l)' }}>{fmtN(top[0]?.error)}</div>
+            <div className="detail-stat-lbl">Top User Errors</div>
+          </div>
+        </div>
+        <div className="detail-section-lbl">Top 20 Users by Failed Jobs</div>
+        {top.map((d, i) => (
+          <div key={d.name} className="detail-row">
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div className="detail-name">#{i + 1} {d.name}</div>
+              <div style={{ fontSize: '.7rem', color: 'var(--muted)' }}>{fmtN(d.error)} errors &bull; {fmtP(d.error_rate)}% rate &bull; {fmtN(d.nodes_failed || 0)} node-jobs failed</div>
+              <div className="detail-mini-bar">
+                <div className="detail-mini-bar-fill" style={{ width: (d.error / maxE * 100) + '%', background: 'var(--error-l)' }} />
+              </div>
+            </div>
+            <span className="detail-badge badge-error">{fmtN(d.error)}</span>
+          </div>
+        ))}
+      </>
+    );
+  }
+
+  if (panel === 'projects') {
+    title = 'Top Error Projects (Anonymised IDs)';
+    const top = (data.projects || []).slice(0, 20);
+    const maxE = top[0]?.error || 1;
+    content = (
+      <>
+        <div className="detail-stat-grid">
+          <div className="detail-stat">
+            <div className="detail-stat-val">{(data.projects || []).length}</div>
+            <div className="detail-stat-lbl">Total Projects</div>
+          </div>
+          <div className="detail-stat">
+            <div className="detail-stat-val" style={{ color: 'var(--warning-l)' }}>{fmtN(top[0]?.error)}</div>
+            <div className="detail-stat-lbl">Top Project Errors</div>
+          </div>
+        </div>
+        <div className="detail-section-lbl">Top 20 Projects by Failed Jobs</div>
+        {top.map((d, i) => (
+          <div key={d.name} className="detail-row">
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div className="detail-name">#{i + 1} {d.name}</div>
+              <div style={{ fontSize: '.7rem', color: 'var(--muted)' }}>{fmtN(d.error)} errors &bull; {fmtP(d.error_rate)}% rate</div>
+              <div className="detail-mini-bar">
+                <div className="detail-mini-bar-fill" style={{ width: (d.error / maxE * 100) + '%', background: 'var(--warning-l)' }} />
+              </div>
+            </div>
+            <span className="detail-badge badge-warning">{fmtN(d.error)}</span>
+          </div>
+        ))}
+      </>
+    );
+  }
+
   return (
     <div className={`detail-panel open`}>
       <div className="detail-panel-header">
@@ -355,19 +487,26 @@ export default function App() {
   const topContrib   = [...entities].sort((a, b) => b.error - a.error)[0];
   const criticalCnt  = entities.filter(d => d.error_rate > 50).length;
   const cleanCnt     = entities.filter(d => d.error_rate < 10).length;
+  const topUser      = (data.users || [])[0];
+  const topProject   = (data.projects || [])[0];
+  const worstSciNodes = [...data.science_field].sort((a, b) => (b.nodes_failed || 0) - (a.nodes_failed || 0))[0];
+  const maxUserErr   = topUser?.error || 1;
 
   const peakLabel = peakDay
     ? `${peakDay.date.slice(5).replace('-', '/')} — ${fmtP(peakDay.error_rate)}%`
     : '—';
 
-  const errBarW    = (s.total_errors / s.total_jobs * 100).toFixed(1) + '%';
-  const rateBarW   = s.overall_error_rate + '%';
-  const sciBarW    = (worstSci?.error_rate ?? 0) + '%';
-  const qBarW      = (worstQ?.error_rate   ?? 0) + '%';
-  const critBarW   = Math.min(criticalCnt / entities.length * 100, 100).toFixed(1) + '%';
-  const peakBarW   = (peakDay?.error_rate  ?? 0) + '%';
-  const topBarW    = topContrib ? (topContrib.error / Math.max(...entities.map(d => d.error)) * 100).toFixed(1) + '%' : '0%';
-  const cleanBarW  = Math.min(cleanCnt / entities.length * 100, 100).toFixed(1) + '%';
+  const errBarW       = (s.total_errors / s.total_jobs * 100).toFixed(1) + '%';
+  const rateBarW      = s.overall_error_rate + '%';
+  const sciBarW       = (worstSci?.error_rate ?? 0) + '%';
+  const qBarW         = (worstQ?.error_rate   ?? 0) + '%';
+  const critBarW      = Math.min(criticalCnt / entities.length * 100, 100).toFixed(1) + '%';
+  const peakBarW      = (peakDay?.error_rate  ?? 0) + '%';
+  const topBarW       = topContrib ? (topContrib.error / Math.max(...entities.map(d => d.error)) * 100).toFixed(1) + '%' : '0%';
+  const cleanBarW     = Math.min(cleanCnt / entities.length * 100, 100).toFixed(1) + '%';
+  const userBarW      = topUser ? (topUser.error / maxUserErr * 100).toFixed(1) + '%' : '0%';
+  const projectBarW   = topProject ? (topProject.error / (topProject.error || 1) * 100).toFixed(1) + '%' : '0%';
+  const sciNodesBarW  = worstSciNodes ? Math.min((worstSciNodes.nodes_failed || 0) / (s.total_nodes_failed || 1) * 100, 100).toFixed(1) + '%' : '0%';
 
   return (
     <>
@@ -460,6 +599,43 @@ export default function App() {
           <AnimatedCount value={cleanCnt} className="kpi-value" style={{ color: 'var(--success-l)' }} />
           <div className="kpi-label">Groups with &lt;10% Error Rate</div>
           <AnimatedBar targetWidth={cleanBarW} barClass="kpi-bar-success" />
+        </div>
+      </section>
+
+      {/* ── KPI Row 3 ── */}
+      <section className="kpi-row-2">
+        <div className={`kpi-card error${panel === 'nodes-failed' ? ' active' : ''}`} onClick={() => togglePanel('nodes-failed')}>
+          <div className="kpi-icon">⬡</div>
+          <AnimatedCount value={s.total_nodes_failed} className="kpi-value" style={{ color: 'var(--error-l)' }} />
+          <div className="kpi-label">Total Node-Jobs Failed</div>
+          <AnimatedBar targetWidth={errBarW} barClass="kpi-bar-error" />
+        </div>
+
+        <div className={`kpi-card${panel === 'sci-nodes' ? ' active' : ''}`} onClick={() => togglePanel('sci-nodes')}>
+          <div className="kpi-icon">◈</div>
+          <div className="kpi-value" style={{ fontSize: '1rem', lineHeight: 1.25, paddingTop: 4, color: 'var(--accent)' }}>
+            {worstSciNodes?.name || '—'}
+          </div>
+          <div className="kpi-label">Science Field — Most Nodes in Failures</div>
+          <AnimatedBar targetWidth={sciNodesBarW} barColor="var(--accent)" />
+        </div>
+
+        <div className={`kpi-card error${panel === 'users' ? ' active' : ''}`} onClick={() => togglePanel('users')}>
+          <div className="kpi-icon">👤</div>
+          <div className="kpi-value" style={{ fontSize: '1rem', lineHeight: 1.25, paddingTop: 4, color: 'var(--error-l)' }}>
+            {topUser?.name || '—'}
+          </div>
+          <div className="kpi-label">Top Error User (Anon ID)</div>
+          <AnimatedBar targetWidth={userBarW} barClass="kpi-bar-error" />
+        </div>
+
+        <div className={`kpi-card${panel === 'projects' ? ' active' : ''}`} onClick={() => togglePanel('projects')}>
+          <div className="kpi-icon">📁</div>
+          <div className="kpi-value" style={{ fontSize: '1rem', lineHeight: 1.25, paddingTop: 4, color: 'var(--warning-l)' }}>
+            {topProject?.name || '—'}
+          </div>
+          <div className="kpi-label">Top Error Project (Anon ID)</div>
+          <AnimatedBar targetWidth={projectBarW} barColor="var(--warning-l)" />
         </div>
       </section>
 

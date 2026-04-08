@@ -24,9 +24,10 @@ export default function RiskQuadrant({ entities }) {
 
       const maxErr = d3.max(entities, d => d.error);
       const midErr = maxErr / 2;
-      const x    = d3.scaleLinear().domain([0, maxErr]).range([0, W]).nice();
-      const y    = d3.scaleLinear().domain([0, 100]).range([H, 0]);
-      const xMid = x(midErr);
+      const x       = d3.scaleLinear().domain([0, maxErr]).range([0, W]).nice();
+      const y       = d3.scaleLinear().domain([0, 100]).range([H, 0]);
+      const xMid    = x(midErr);
+      const rScale  = d3.scaleSqrt().domain([0, d3.max(entities, d => d.total)]).range([4, 18]);
 
       // Quadrant backgrounds
       [
@@ -62,7 +63,7 @@ export default function RiskQuadrant({ entities }) {
 
       svg.selectAll('.qdot').data(entities).join('circle')
         .attr('class', 'qdot')
-        .attr('cx', d => x(d.error)).attr('cy', H).attr('r', 5)
+        .attr('cx', d => x(d.error)).attr('cy', H).attr('r', d => rScale(d.total))
         .attr('fill',   d => FEATURE_COLORS[d.feature])
         .attr('stroke', d => rateColor(d.error_rate)).attr('stroke-width', 1.5)
         .attr('opacity', 0.8).attr('cursor', 'pointer')
@@ -76,7 +77,8 @@ export default function RiskQuadrant({ entities }) {
         ))
         .on('mouseleave', hideTip)
         .transition().duration(700).ease(d3.easeCubicOut).delay((_, i) => i * 15)
-        .attr('cy', d => y(d.error_rate));
+        .attr('cy', d => y(d.error_rate))
+        .attr('r', d => rScale(d.total));
 
       svg.append('g').attr('class', 'axis').attr('transform', `translate(0,${H})`)
         .call(d3.axisBottom(x).ticks(5).tickFormat(fmtI));
@@ -95,6 +97,9 @@ export default function RiskQuadrant({ entities }) {
           `<span class="quad-swatch" style="background:${FEATURE_COLORS[key]}"></span>${label}`
         );
       });
+      leg.append('div').attr('class', 'quad-legend-item').html(
+        `<span class="quad-swatch" style="background:none;border:1.5px solid #7a8fa8;border-radius:50%;width:10px;height:10px"></span>bubble size = job volume`
+      );
     }
 
     render();
